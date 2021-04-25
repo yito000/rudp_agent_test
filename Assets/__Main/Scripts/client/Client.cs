@@ -18,7 +18,22 @@ public class Client : MonoBehaviour
 
     void OnEnable()
     {
-        Connect();
+        events.Add(NetworkDefine.OpCode.ActorList, (dataReader) => {
+            ReceiveEvent.OnReceiveActorList(dataReader);
+        });
+        events.Add(NetworkDefine.OpCode.MoveActors, (dataReader) => {
+            ReceiveEvent.OnMoveActors(dataReader, actorsDict);
+        });
+        events.Add(NetworkDefine.OpCode.SpawnActor, (dataReader) => {
+            ReceiveEvent.OnSpawnActor(dataReader);
+        });
+
+#if UNITY_EDITOR
+        if (!NetworkConfig.Inst.IsEditorClientOnlyNetwork)
+        {
+            Connect();
+        }
+#endif
     }
 
     void Update()
@@ -34,20 +49,19 @@ public class Client : MonoBehaviour
 
     public void Connect()
     {
+#if UNITY_EDITOR
+        if (!NetworkConfig.Inst.IsEditorClientOnlyNetwork && client != null)
+        {
+            return;
+        }
+#endif
+
+        Disconnect();
+
         listener = new EventBasedNetListener();
         client = new NetManager(listener);
         client.Start();
         client.Connect(NetworkConfig.Inst.IpAddress, NetworkConfig.Inst.Port, "");
-
-        events.Add(NetworkDefine.OpCode.ActorList, (dataReader) => {
-            ReceiveEvent.OnReceiveActorList(dataReader);
-        });
-        events.Add(NetworkDefine.OpCode.MoveActors, (dataReader) => {
-            ReceiveEvent.OnMoveActors(dataReader, actorsDict);
-        });
-        events.Add(NetworkDefine.OpCode.SpawnActor, (dataReader) => {
-            ReceiveEvent.OnSpawnActor(dataReader);
-        });
 
         listener.PeerConnectedEvent += peer =>
         {
@@ -77,16 +91,31 @@ public class Client : MonoBehaviour
 
     public void Disconnect()
     {
+#if UNITY_EDITOR
+        if (!NetworkConfig.Inst.IsEditorClientOnlyNetwork)
+        {
+            return;
+        }
+#endif
+
         if (client != null)
         {
             client.Stop();
             client = null;
             serverPeer = null;
+
+            actors = null;
+            actorsDict.Clear();
+
+            AgentManager.Inst.RemoveAllActors();
         }
     }
 
     public void CommandSpawnActor()
     {
+        if (client == null)
+            return;
+
         var op = BitConverter.GetBytes((int)NetworkDefine.ClientCommand.SpawnActor);
 
         NetDataWriter writer = new NetDataWriter();
@@ -103,6 +132,8 @@ public class Client : MonoBehaviour
             var length = dataReader.GetInt();
             var b = new byte[length];
             dataReader.GetBytes(b, 0, length);
+
+            Debug.Log("on receive actor list");
 
             var offset = 0;
 

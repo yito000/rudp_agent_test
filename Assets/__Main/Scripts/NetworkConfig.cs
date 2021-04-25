@@ -60,4 +60,9 @@ public class NetworkConfig : MonoBehaviour
             Inst = this;
         }
     }
+
+    public void ChangeIpAddress(string v)
+    {
+        ipAddress = v;
+    }
 }

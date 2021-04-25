@@ -11,8 +11,8 @@ public class Server : MonoBehaviour
     private NetManager server;
 
     private List<NetPeer> peers = new List<NetPeer>();
-    private GameObject[] actors;
-    private Dictionary<int, GameObject> actorsDict;
+    private GameObject[] actors; // TODO: instant code
+    private Dictionary<int, GameObject> actorsDict; // TODO: instant code
     private Dictionary<NetworkDefine.ClientCommand, Action<NetDataReader>> events = 
         new Dictionary<NetworkDefine.ClientCommand, Action<NetDataReader>>();
 
@@ -53,12 +53,14 @@ public class Server : MonoBehaviour
             dataReader.Recycle();
         };
 
+        // TODO: instant code start
         var a = GameObject.FindGameObjectsWithTag("Actor");
         actors = new GameObject[a.Length];
 
         Array.Copy(a, actors, a.Length);
 
         actorsDict = actors.ToDictionary(a => a.GetComponent<NetworkObject>().Id, a => a);
+        // TODO: instant code end
     }
 
     void OnDisable()
@@ -92,7 +94,7 @@ public class Server : MonoBehaviour
     {
         const int unit_size = 4;
         var agentsDict = AgentManager.Inst.AgentDict;
-        var dataSize = unit_size * (actorsDict.Count + agentsDict.Count);
+        var dataSize = unit_size * agentsDict.Count;
         var b = new byte[dataSize + 4 + 4];
         var op = BitConverter.GetBytes((int)NetworkDefine.OpCode.ActorList);
         var asize = BitConverter.GetBytes(dataSize);
@@ -101,14 +103,6 @@ public class Server : MonoBehaviour
         Buffer.BlockCopy(asize, 0, b, 4, 4);
 
         int offset = 8;
-        foreach (var a in actorsDict)
-        {
-            var id = BitConverter.GetBytes(a.Key);
-            Buffer.BlockCopy(id, 0, b, offset, 4);
-
-            offset += unit_size;
-        }
-
         foreach (var a in agentsDict)
         {
             var id = BitConverter.GetBytes(a.Key);

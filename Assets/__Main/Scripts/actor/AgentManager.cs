@@ -41,31 +41,29 @@ public class AgentManager : MonoBehaviour
     public (int, GameObject) SpawnServerAgent()
     {
         var newActor = Instantiate(ServerAgentTemplate);
-        agentDict[currentId++] = newActor;
+        agentDict[currentId] = newActor;
         agentList.Add(newActor);
 
-        // TODO start: instant code
         newActor.GetComponent<NetworkObject>().Id = currentId;
 
+        // TODO start: instant code
         var a = GameObject.FindGameObjectsWithTag("Actor");
         newActor.GetComponent<Agent>().Setup(a[0], a[1]);
         newActor.GetComponent<NavMeshAgent>().speed = UnityEngine.Random.Range(3.0f, 4.0f);
         // TODO end
 
-        return (currentId, newActor);
+        return (currentId++, newActor);
     }
 
     public (int, GameObject) SpawnClientAgent(int id)
     {
         var newActor = Instantiate(ClientAgentTemplate);
-        agentDict[currentId++] = newActor;
+        agentDict[id] = newActor;
         agentList.Add(newActor);
 
-        // TODO start: instant code
         newActor.GetComponent<NetworkObject>().Id = id;
-        // TODO end
 
-        return (currentId, newActor);
+        return (id, newActor);
     }
 
     public bool RemoveActor(int id)
@@ -75,10 +73,23 @@ public class AgentManager : MonoBehaviour
             return false;
         }
 
+        Destroy(agentDict[id]);
+
         agentList.Remove(agentDict[id]);
         agentDict.Remove(id);
 
         return true;
+    }
+
+    public void RemoveAllActors()
+    {
+        foreach (var a in agentList)
+        {
+            Destroy(a);
+        }
+
+        agentList.Clear();
+        agentDict.Clear();
     }
 
     public List<GameObject> AgentList

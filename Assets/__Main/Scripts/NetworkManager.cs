@@ -5,6 +5,9 @@ using UnityEngine.Rendering;
 
 public class NetworkManager : MonoBehaviour
 {
+    private Client client;
+    private Server server;
+
     public static NetworkManager Inst;
     void Awake()
     {
@@ -25,33 +28,40 @@ public class NetworkManager : MonoBehaviour
         {
             if (!NetworkConfig.Inst.IsEditorClientOnlyNetwork)
             {
-                gameObject.AddComponent<Server>();
+                server = gameObject.AddComponent<Server>();
             }
-            gameObject.AddComponent<Client>();
+            client = gameObject.AddComponent<Client>();
         }
 #else
         if (NetworkConfig.Inst.IsNetworkMode)
         {
             if (IsHeadless())
             {
-                gameObject.AddComponent<Server>();
+                server = gameObject.AddComponent<Server>();
 
                 DisableRenderers();
             }
             else
             {
-                gameObject.AddComponent<Client>();
+                client = gameObject.AddComponent<Client>();
             }
         }
 #endif
     }
 
+    public void ConnectServer()
+    {
+        if (client != null)
+        {
+            client.Connect();
+        }
+    }
+
     public void SpawnActorCommand()
     {
-        var c = gameObject.GetComponent<Client>();
-        if (c != null)
+        if (client != null)
         {
-            c.CommandSpawnActor();
+            client.CommandSpawnActor();
         }
     }
 
