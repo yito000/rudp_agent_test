@@ -43,7 +43,7 @@ public class Mover : MonoBehaviour
         }
 
         var newPos = transform.position;
-        newPos.x += moveSpeed * sign;
+        newPos.x += moveSpeed * sign * Time.deltaTime;
 
         transform.position = newPos;
     }
