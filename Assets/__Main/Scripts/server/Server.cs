@@ -18,6 +18,10 @@ public class Server : MonoBehaviour
 
     void OnEnable()
     {
+#if !UNITY_EDITOR
+        Time.fixedDeltaTime = NetworkConfig.Inst.FixedDeltaTimeRate; 
+#endif
+
         listener = new EventBasedNetListener();
         server = new NetManager(listener);
         server.Start(NetworkConfig.Inst.Port);
@@ -79,7 +83,7 @@ public class Server : MonoBehaviour
         server.PollEvents();
     }
 
-    void LateUpdate()
+    void FixedUpdate()
     {
         SyncActorPositions();
     }
@@ -92,7 +96,7 @@ public class Server : MonoBehaviour
 
     private void SyncActorList(NetPeer peer)
     {
-        const int unit_size = 4;
+        const int unit_size = 16;
         var agentsDict = AgentManager.Inst.AgentDict;
         var dataSize = unit_size * agentsDict.Count;
         var b = new byte[dataSize + 4 + 4];
@@ -106,7 +110,14 @@ public class Server : MonoBehaviour
         foreach (var a in agentsDict)
         {
             var id = BitConverter.GetBytes(a.Key);
+            var x = BitConverter.GetBytes(a.Value.transform.position.x);
+            var y = BitConverter.GetBytes(a.Value.transform.position.y);
+            var z = BitConverter.GetBytes(a.Value.transform.position.z);
+
             Buffer.BlockCopy(id, 0, b, offset, 4);
+            Buffer.BlockCopy(x, 0, b, offset + 4, 4);
+            Buffer.BlockCopy(y, 0, b, offset + 8, 4);
+            Buffer.BlockCopy(z, 0, b, offset + 12, 4);
 
             offset += unit_size;
         }

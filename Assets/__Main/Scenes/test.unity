@@ -2569,7 +2569,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isNetworkMode: 1
-  isEditorClientOnlyNetwork: 0
+  isEditorClientOnlyNetwork: 1
+  fixedDeltaTimeRate: 0.05
   ipAddress: localhost
   port: 9050
 --- !u!114 &1936805058

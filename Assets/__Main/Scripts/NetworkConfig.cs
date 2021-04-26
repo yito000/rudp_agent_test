@@ -11,6 +11,9 @@ public class NetworkConfig : MonoBehaviour
     private bool isEditorClientOnlyNetwork;
 
     [SerializeField]
+    private float fixedDeltaTimeRate;
+
+    [SerializeField]
     private string ipAddress = "localhost";
 
     [SerializeField]
@@ -29,6 +32,14 @@ public class NetworkConfig : MonoBehaviour
         get
         {
             return isEditorClientOnlyNetwork;
+        }
+    }
+
+    public float FixedDeltaTimeRate
+    {
+        get
+        {
+            return fixedDeltaTimeRate;
         }
     }
 

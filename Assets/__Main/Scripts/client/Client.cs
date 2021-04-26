@@ -128,7 +128,7 @@ public class Client : MonoBehaviour
     {
         public static void OnReceiveActorList(NetDataReader dataReader)
         {
-            const int unit_size = 4;
+            const int unit_size = 16;
             var length = dataReader.GetInt();
             var b = new byte[length];
             dataReader.GetBytes(b, 0, length);
@@ -141,14 +141,21 @@ public class Client : MonoBehaviour
             for (int i = 0; i < max; i++)
             {
                 var id = BitConverter.ToInt32(b, offset);
+                var x = BitConverter.ToSingle(b, offset + 4);
+                var y = BitConverter.ToSingle(b, offset + 8);
+                var z = BitConverter.ToSingle(b, offset + 12);
+                var v = new Vector3(x, y, z);
+
                 if (!AgentManager.Inst.AgentDict.ContainsKey(id))
                 {
 #if !UNITY_EDITOR
                     var a = AgentManager.Inst.SpawnClientAgent(id);
+                    a.Item2.transform.position = v;
 #else
                     if (NetworkConfig.Inst.IsEditorClientOnlyNetwork)
                     {
                         var a = AgentManager.Inst.SpawnClientAgent(id);
+                        a.Item2.transform.position = v;
                     }
 #endif
                 }
@@ -180,11 +187,19 @@ public class Client : MonoBehaviour
                 //Debug.Log(v);
 
 #if !UNITY_EDITOR
-                a.transform.position = v;
+                var ca = a.GetComponent<ClientAgent>();
+                if (ca != null)
+                    ca.UpdateNewPosition(v);
+                else
+                    a.transform.position = v;
 #else
                 if (NetworkConfig.Inst.IsEditorClientOnlyNetwork)
                 {
-                    a.transform.position = v;
+                    var ca = a.GetComponent<ClientAgent>();
+                    if (ca != null)
+                        ca.UpdateNewPosition(v);
+                    else
+                        a.transform.position = v;
                 }
 #endif
             };
